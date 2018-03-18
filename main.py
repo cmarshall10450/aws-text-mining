@@ -36,8 +36,7 @@ key_phrases = flatten([item['KeyPhrases'] for item in key_phrases])
 for i in range(0, len(sentiments)):
     sentiments[i]['Index'] = i
 
-with open(sys.argv[2]) as json_file:
-    data = json.load(json_file)
+data = {}
 
 data['OverallSentimentScores'], data['OverallSentiment'] = get_overall_sentiment(
     sentiments)
