@@ -29,7 +29,8 @@ for item in objects:
     text = item_data['Body'].read()
     data = analyse(text)
 
-    newKey = key.split('.')[0] + '.json'
+    parts = key.split('/')
+    newKey = 'sandbox/' + parts[len(parts) -1 ].split('.')[0] + '.json'
     print(newKey)
     put_object(
             bucket=bucket,

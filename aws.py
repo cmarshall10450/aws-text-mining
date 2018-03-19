@@ -88,13 +88,12 @@ def get_object(bucket, key):
 
 def put_object(bucket, key, body):
     try:
-        print(json.dumps(body, sort_keys=True, indent=2)
-                )
-        obj = s3.put_object(
+#        print(json.dumps(body, sort_keys=True, indent=2)
+#                )
+        s3.put_object(
                 Bucket=bucket,
                 Key=key,
-                Body='b' + json.dumps(body, sort_keys=True, indent=2),
+                Body=json.dumps(body, sort_keys=True, indent=2),
                 )
-        return obj
     except ClientError as e:
         return e.response['Error']
