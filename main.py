@@ -1,48 +1,40 @@
 import json
+import re
 import sys
-from utils import flatten
-from aws import get_batch_sentiment, get_batch_entities, get_batch_key_phrases, get_overall_sentiment
+from utils import analyse
+from aws import list_objects, get_object, put_object
 
+bucket = sys.argv[1]
 
-def chunks(l, n):
-    return [l[i:i + n] for i in range(0, len(l), n)]
+# file = open(sys.argv[1], 'r')
 
+# text = file.read()
 
-file = open(sys.argv[1], 'r')
+objects = list_objects(
+        bucket=bucket,
+        prefix='inbound/text-analysis/',
+        delimiter='/'
+        )['Contents']
 
-text = file.read()
+regex = re.compile(r'\/$')
+objects = list(filter(lambda x: not regex.search(x['Key']), objects))
 
-chunk_size = 5000
-text_chunks = chunks(text, chunk_size)
+for item in objects:
+    key = item['Key']
+    item_data = get_object(
+            bucket=bucket,
+            key=key
+            )
 
-max_result_length = 25
-result = chunks(text_chunks, max_result_length)
+    text = item_data['Body'].read()
+    data = analyse(text)
 
-sentiments = [get_batch_sentiment(text_list=result[i])['ResultList']
-              for i in range(0, len(result))]
-sentiments = flatten(sentiments)
-
-entities = [get_batch_entities(text_list=result[i])['ResultList']
-            for i in range(0, len(result))]
-entities = flatten(entities)
-entities = flatten([item['Entities'] for item in entities])
-
-key_phrases = [get_batch_key_phrases(text_list=result[i])['ResultList']
-               for i in range(0, len(result))]
-key_phrases = flatten(key_phrases)
-key_phrases = flatten([item['KeyPhrases'] for item in key_phrases])
-
-
-for i in range(0, len(sentiments)):
-    sentiments[i]['Index'] = i
-
-data = {}
-
-data['OverallSentimentScores'], data['OverallSentiment'] = get_overall_sentiment(
-    sentiments)
-data['Sentiments'] = sentiments
-data['Entities'] = entities
-data['KeyPhrases'] = key_phrases
-
-with open(sys.argv[2], 'w') as outfile:
-    json.dump(data, outfile, sort_keys=True, indent=2)
+    newKey = key.split('.')[0] + '.json'
+    print(newKey)
+    put_object(
+            bucket=bucket,
+            key=newKey,
+            body=data
+            )
+# with open(sys.argv[2], 'w') as outfile:
+    # json.dump(data, outfile, sort_keys=True, indent=2)

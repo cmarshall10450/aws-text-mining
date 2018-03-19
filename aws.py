@@ -1,7 +1,9 @@
+import json
 import boto3
 from botocore.exceptions import ClientError
 
 comp = boto3.client(service_name='comprehend', region_name='eu-west-1')
+s3 = boto3.client(service_name='s3', region_name='eu-west-1')
 
 
 def get_batch_sentiment(text_list):
@@ -39,7 +41,6 @@ def get_batch_key_phrases(text_list):
     except ClientError as e:
         return e.response['Error']
 
-
 def get_overall_sentiment(sentiment_list):
     scores = [0, 0, 0, 0]
     sentiments = ['MIXED', 'NEUTRAL', 'POSITIVE', 'NEGATIVE']
@@ -66,3 +67,34 @@ def get_overall_sentiment(sentiment_list):
     overall_sentiment = sentiments[overall_sentiment_index]
 
     return [sentiment_scores, overall_sentiment]
+
+def list_objects(bucket, prefix, delimiter):
+    return s3.list_objects(
+            Bucket=bucket,
+            Prefix=prefix,
+            Delimiter=delimiter
+            )
+
+def get_object(bucket, key):
+    try:
+        obj = s3.get_object(
+                Bucket=bucket,
+                Key=key
+                )
+
+        return obj
+    except ClientError as e:
+        return obj.response['Error']
+
+def put_object(bucket, key, body):
+    try:
+        print(json.dumps(body, sort_keys=True, indent=2)
+                )
+        obj = s3.put_object(
+                Bucket=bucket,
+                Key=key,
+                Body='b' + json.dumps(body, sort_keys=True, indent=2),
+                )
+        return obj
+    except ClientError as e:
+        return e.response['Error']
