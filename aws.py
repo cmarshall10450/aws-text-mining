@@ -88,8 +88,6 @@ def get_object(bucket, key):
 
 def put_object(bucket, key, body):
     try:
-#        print(json.dumps(body, sort_keys=True, indent=2)
-#                )
         s3.put_object(
                 Bucket=bucket,
                 Key=key,

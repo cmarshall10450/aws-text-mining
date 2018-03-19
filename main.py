@@ -6,10 +6,6 @@ from aws import list_objects, get_object, put_object
 
 bucket = sys.argv[1]
 
-# file = open(sys.argv[1], 'r')
-
-# text = file.read()
-
 objects = list_objects(
         bucket=bucket,
         prefix='inbound/text-analysis/',
@@ -37,5 +33,3 @@ for item in objects:
             key=newKey,
             body=data
             )
-# with open(sys.argv[2], 'w') as outfile:
-    # json.dump(data, outfile, sort_keys=True, indent=2)
