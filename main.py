@@ -2,7 +2,7 @@ import json
 import sys
 import re
 import argparse
-from utils import analyse
+from utils import analyse_object, save_etags, get_analysed_tags
 from aws import list_objects, get_object, put_object
 
 parser = argparse.ArgumentParser()
@@ -23,22 +23,21 @@ objects = list_objects(
 regex = re.compile(r'\/$')
 objects = list(filter(lambda x: not regex.search(x['Key']), objects))
 
+analysed_tags = get_analysed_tags(bucket)
+
+save_etags(
+        bucket=bucket,
+        key='sandbox/text-analysis/analysed-files.json',
+        objects=objects
+        )
+
 for item in objects:
-    key = item['Key']
-    item_data = get_object(
-        bucket=bucket,
-        key=key
-    )
+    if not item['ETag'] in analysed_tags:
+        newKey, data = analyse_object(item, bucket, args['outputPrefix'])
+        print('Result: '+ newKey)
 
-    text = item_data['Body'].read()
-    data = analyse(text)
-
-    parts = key.split('/')
-    newKey = args['outputPrefix'] + \
-        parts[len(parts) - 1].split('.')[0] + '.json'
-    print(newKey)
-    put_object(
-        bucket=bucket,
-        key=newKey,
-        body=data
-    )
+        put_object(
+            bucket=bucket,
+            key=newKey,
+            body=data
+        )
